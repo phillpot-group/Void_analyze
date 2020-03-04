@@ -1,0 +1,8 @@
+#test
+.vs
+out
+cmake-build-debug
+cmake-build-release
+CMakeSettings.json
+test/voids_position.xyz
+test/voids_surface_position.xyz
