@@ -4,20 +4,37 @@
 //
 
 #include <set>
+#include <memory>
+using std::unique_ptr;
+
 #include "functions.h"
 
-vector<std::set<const bin*>> find_voids_sruface(const vector<vector<const bin*>>& bn_vds, const grid_bin_type& grid_bins, const grid_info& gr_nf, const settings& config)
+#ifdef DEBUG
+
+#include <iostream>
+#include "timer.h"
+using std::cout;
+using std::endl;
+
+#endif
+
+auto find_voids_sruface(unique_ptr<vector<vector<const bin*>>>& bn_vds_ptr, const grid_bin_type& grid_bins, const grid_info& gr_nf, const settings& config)->std::unique_ptr<vector<vector<const bin*>>>
 {
+
+#ifdef  DEBUG
+	const timer Timer(std::cout, "Looking for the surface atoms of voids");
+#endif
+
 	auto surface_bin = [&grid_bins, &gr_nf, &config](const bin* sgnl_bin, const int& dbinx, const int& dbiny, const int& dbinz) -> const bin* {
 		auto [nx, ny, nz] = sgnl_bin->relative_bin_pos(dbinx, dbiny, dbinz, gr_nf, config.isPeriodic());
 		return &grid_bins[nx][ny][nz];
 	};
 
 	vector<std::set<const bin*>> bin_voids_surface;
-	bin_voids_surface.reserve(bn_vds.size());
+	bin_voids_surface.reserve(bn_vds_ptr->size());
 	std::set<const bin*> tmp_set;
 
-	for (const auto& vbin_ptr : bn_vds)
+	for (const auto& vbin_ptr : *bn_vds_ptr)
 	{
 		tmp_set.clear();
 		for (const auto& bin_ptr : vbin_ptr)
@@ -31,6 +48,16 @@ vector<std::set<const bin*>> find_voids_sruface(const vector<vector<const bin*>>
 		}
 		bin_voids_surface.push_back(tmp_set);
 	}
+	
 	bin_voids_surface.shrink_to_fit();
-	return bin_voids_surface;
+	auto bin_voids_surface_ptr = std::make_unique<vector<vector<const bin*>>>();
+	for (const auto& s : bin_voids_surface)
+	{
+		bin_voids_surface_ptr->emplace_back(s.begin(), s.end());
+	}
+
+#ifdef  DEBUG
+	Timer.span();
+#endif
+	return bin_voids_surface_ptr;
 }

@@ -6,9 +6,9 @@ set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
 set(BUILD_TESTING TRUE)
 #set(CMAKE_BUILD_TYPE "Release")
 
-if (CMAKE_BUILD_TYPE STREQUAL Debug)
-    add_compile_definitions("DEBUG")
-endif()
+# if (CMAKE_BUILD_TYPE STREQUAL Debug)
+add_compile_definitions("DEBUG")
+# endif()
 
 #set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3")
 
@@ -18,6 +18,18 @@ if (NOT EXISTS "${CMAKE_BINARY_DIR}/conan.cmake")
     file(DOWNLOAD "https://github.com/conan-io/cmake-conan/raw/v0.15/conan.cmake"
             "${CMAKE_BINARY_DIR}/conan.cmake")
 endif ()
+
+if (NOT EXISTS "${PROJECT_SOURCE_DIR}/include/timer.h")
+    message(STATUS "Downloading timer.h from https://github.com/MikeShi1993/SFT")
+    file(DOWNLOAD "https://raw.githubusercontent.com/MikeShi1993/SFT/master/include/timer.h"
+            "${PROJECT_SOURCE_DIR}/include/timer.h")
+endif()
+
+if (NOT EXISTS "${PROJECT_SOURCE_DIR}/include/color.h")
+    message(STATUS "Downloading color.h from https://github.com/MikeShi1993/SFT")
+    file(DOWNLOAD "https://raw.githubusercontent.com/MikeShi1993/SFT/master/include/color.h"
+            "${PROJECT_SOURCE_DIR}/include/color.h")
+endif()
 
 include(${CMAKE_BINARY_DIR}/conan.cmake)
 
@@ -64,3 +76,5 @@ endif ()
 if (CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME AND BUILD_TESTING)
     add_subdirectory(${PROJECT_SOURCE_DIR}/unit_test)
 endif ()
+
+add_subdirectory(${PROJECT_SOURCE_DIR}/test_graph)

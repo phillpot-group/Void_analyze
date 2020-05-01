@@ -4,13 +4,17 @@
 #include "settings.h"
 #include "atom.h"
 #include "bin.h"
-#include "simulation_cell.h"
-#include "grid_info.h"
 #include "functions.h"
+#include "grid_info.h"
+#include "simulation_cell.h"
+#include "output_analysis_info.h"
+#include "output_surface_atoms.h"
+#include "output_voids.h"
 
 using std::cout;
 using std::cin;
 using std::endl;
+using std::string;
 using std::vector;
 
 typedef boost::multi_array<bin, 3> grid_bin_type;
@@ -24,11 +28,10 @@ int main(int argc, char** argv) {
 	//simulation_cell sc(181.5, 181.5, 28, 0, 0, -12.25);
 	
 	auto parsed_options = parse(argc, argv);
-	settings config(parsed_options["f"].as<string>());
-	simulation_cell sc(parsed_options["f"].as<string>());
-	set_parameter(config, sc, parsed_options);
-
-	grid_info gr_nf(config, sc);
+	auto sc_ptr = std::make_shared<simulation_cell>(parsed_options);
+	settings config(parsed_options, *sc_ptr);
+	
+	grid_info gr_nf(config, *sc_ptr);
 	// Create bin array
 	const auto [nx, ny, nz] = gr_nf.get_grid_no();
 	grid_bin_type grid_bins(boost::extents[nx][ny][nz]);
@@ -37,12 +40,18 @@ int main(int argc, char** argv) {
 			for (bin_index k = 0; k != nz; ++k) { grid_bins[i][j][k].set_bin(i, j, k, gr_nf.get_grid_size()); }
 
 	vector<atom> vec_atoms;
-	read_xyz_file(vec_atoms, grid_bins, config.get_path_structure_input(), sc, gr_nf, cout);
+	read_xyz_file(vec_atoms, grid_bins, config.get_path_structure_input(), *sc_ptr, gr_nf, cout);
 	vector<const bin*> empty_bins = check_empty_bin(grid_bins, config);
-	vector<vector<const bin*>> bin_voids = find_voids(empty_bins, gr_nf, config);
-	filter_small_bins(bin_voids, config);
-	vector<std::set<const bin*>> bin_voids_surface = find_voids_sruface(bin_voids, grid_bins, gr_nf, config);
-	write_xyz_voids_surface_atom(bin_voids_surface, sc, config);
-	write_xyz_voids(bin_voids, sc, config);
+	auto bin_voids_ptr = find_voids(empty_bins, gr_nf, config);
+	filter_bins(bin_voids_ptr, config, gr_nf);
+	auto bin_voids_surface_ptr = find_voids_sruface(bin_voids_ptr, grid_bins, gr_nf, config);
+	output_voids op_v(config.get_filename_voids_position_xyz(), sc_ptr);
+	op_v.write_xyz(bin_voids_ptr);
+	output_surface_atoms op_s(config.get_filename_voids_surface_position_xyz(), sc_ptr);
+	op_s.write_xyz(bin_voids_surface_ptr);
+	output_analysis_info op_a(config.get_filename_voids_analysis_info(), sc_ptr, gr_nf);
+	op_a.write_info(bin_voids_ptr, bin_voids_surface_ptr);
+	//write_xyz_voids_surface_atom(bin_voids_surface, sc, config);
+	//write_xyz_voids(bin_voids, sc, config);
 	return 0;
 }

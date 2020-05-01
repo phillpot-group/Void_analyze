@@ -21,7 +21,7 @@ using std::vector;
 #include "simulation_cell.h"
 #include "grid_info.h"
 #include "bin.h"
-#include "color_codes.h"
+#include "color.h"
 
 typedef boost::multi_array<bin, 3> grid_bin_type;
 
@@ -43,8 +43,8 @@ void read_xyz_file(vector<atom>& vec_atoms, grid_bin_type& grid_bins, const std:
 	const auto [gr_nx, gr_ny, gr_nz] = gr_if.get_grid_no();
 
 	if (!file.is_open()) {
-		cerr << RED << "Failed to read file: " << path_structure.filename() << endl;
-		cerr << "The program is aborted." << RESET << endl;
+		cerr << Color::Red << "Failed to read file: " << path_structure.filename() << endl;
+		cerr << "The program is aborted." << Color::None << endl;
 		exit(EXIT_FAILURE);
 	}
 	else {
@@ -55,8 +55,8 @@ void read_xyz_file(vector<atom>& vec_atoms, grid_bin_type& grid_bins, const std:
 	file.ignore(max_character_per_line, '\n');
 	file.ignore(max_character_per_line, '\n');
 	if (!file) {
-		cerr << RED << "Incorrect xyz file format." << endl;
-		cerr << "The program is aborted." << RESET << endl;
+		cerr << Color::Red << "Incorrect xyz file format." << endl;
+		cerr << "The program is aborted." << Color::None << endl;
 		exit(EXIT_FAILURE);
 	}
 	vec_atoms.reserve(n_atoms);
@@ -66,7 +66,7 @@ void read_xyz_file(vector<atom>& vec_atoms, grid_bin_type& grid_bins, const std:
 		line_s.str(line);
 		line_s >> element >> x >> y >> z;
 
-		// reset origin
+		// Color::None origin
 		x -= ox;
 		y -= oy;
 		z -= oz;
@@ -74,18 +74,18 @@ void read_xyz_file(vector<atom>& vec_atoms, grid_bin_type& grid_bins, const std:
 		y = std::fmod(y, vy);
 		z = std::fmod(z, vz);
 		if (x >= vx || x < 0) {
-			cerr << RED << path_structure << " Line " << count << " :atom is outside the cell at x direction." << endl;
-			cerr << "The program is aborted." << RESET << endl;
+			cerr << Color::Red << path_structure << " Line " << count << " :atom is outside the cell at x direction." << endl;
+			cerr << "The program is aborted." << Color::None << endl;
 			exit(EXIT_FAILURE);
 		}
 		if (y >= vy || y < 0) {
-			cerr << RED << path_structure << " Line " << count << " :atom is outside the cell at y direction." << endl;
-			cerr << "The program is aborted." << RESET << endl;
+			cerr << Color::Red << path_structure << " Line " << count << " :atom is outside the cell at y direction." << endl;
+			cerr << "The program is aborted." << Color::None << endl;
 			exit(EXIT_FAILURE);
 		}
 		if (z >= vz || z < 0) {
-			cerr << RED << path_structure << " Line " << count << " :atom is outside the cell at z direction." << endl;
-			cerr << "The program is aborted." << RESET << endl;
+			cerr << Color::Red << path_structure << " Line " << count << " :atom is outside the cell at z direction." << endl;
+			cerr << "The program is aborted." << Color::None << endl;
 			exit(EXIT_FAILURE);
 		}
 		vec_atoms.emplace_back(element, x, y, z);
@@ -96,17 +96,17 @@ void read_xyz_file(vector<atom>& vec_atoms, grid_bin_type& grid_bins, const std:
 		zbz = static_cast<grid_bin_type::size_type> (z / gr_dz);
 
 		if (xbx >= gr_nx || yby >= gr_ny || zbz >= gr_nz) {
-			cerr << RED << "The bin_index of bin is over the max number of bins on one direction." << endl;
-			cerr << "The program is aborted." << RESET << endl;
+			cerr << Color::Red << "The bin_index of bin is over the max number of bins on one direction." << endl;
+			cerr << "The program is aborted." << Color::None << endl;
 			exit(EXIT_FAILURE);
 		}
 
 		grid_bins[xbx][yby][zbz].add_atm_ptr(&vec_atoms.back());
 	}
 	if (n_atoms != vec_atoms.size()) {
-		cerr << RED << "The actual number of atoms: " << vec_atoms.size()
+		cerr << Color::Red << "The actual number of atoms: " << vec_atoms.size()
 			<< "is different with the declared number: " << n_atoms << endl;
-		cerr << "The program is aborted." << RESET << endl;
+		cerr << "The program is aborted." << Color::None << endl;
 		exit(EXIT_FAILURE);
 	}
 	os << "Finish reading xyz position file." << endl;

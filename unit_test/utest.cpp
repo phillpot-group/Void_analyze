@@ -51,15 +51,18 @@ TEST_CASE("Check CLI option parse function") {
 						  "-f",
 						  "test.xyz",
 						  "--circle",
-						  "15,20,25"
+						  "15,20,25",
+						  "--rm_lg=true",
 			});
 		auto result = parse(argv.argc(), argv.argv());
 		CHECK(result.count("f") == 1);
 		CHECK(result.count("file") == 1);
 		CHECK(result.count("circle") == 1);
+		CHECK(result.count("rm_lg") == 1);
 		CHECK(result["f"].as<string>() == "test.xyz");
 		CHECK(result["file"].as<string>() == "test.xyz");
 		CHECK(compare(result["circle"].as<vector<double>>(), { 15.0, 20.0, 25.0 }));
+		CHECK(result["rm_lg"].as<bool>() == true);
 	}
 }
 

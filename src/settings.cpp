@@ -10,20 +10,50 @@ using std::endl;
 #include <string>
 using std::string;
 
-#include "color_codes.h"
+#include <vector>
+using std::vector;
+
+#include "color.h"
+#include "functions.h"
 #include "settings.h"
 
 
-settings::settings(const string& path_strctr) {
-	try {
-		path_structure_input_ = std::filesystem::canonical(path_strctr);
+settings::settings(const string& path) {
+	filesystem_variables_initialization(path);
+}
+
+settings::settings(const cxxopts::ParseResult& parsed_options, const simulation_cell& sc)
+{
+	string path = parsed_options["f"].as<string>();
+	if (parsed_options.count("circle"))
+	{
+		vector<double> data = parsed_options["circle"].as<vector<double>>();
+		if (data.size() != 3)
+		{
+			cerr << Color::Red << "Please specify the radius and position of the circle function" << Color::None << endl;
+			exit(EXIT_FAILURE);
+		}
+
+		double ox_c = data[0];
+		double oy_c = data[1];
+		double r = data[2];
+
+		auto f = [ox_c, oy_c, r, &sc](const double x, const double y, const double z)-> bool
+		{
+			return is_in_circle(ox_c, oy_c, r, sc, x, y, z);
+		};
+		set_filter_func(f);
+		set_flag_rm_biggest_void(true);
 	}
-	catch (const std::filesystem::filesystem_error & e) {
-		cerr << RED << e.what() << RESET << endl;
-		exit(EXIT_FAILURE);
+	if (parsed_options.count("rm_lg"))
+	{
+		set_flag_rm_biggest_void(parsed_options["rm_lg"].as<bool>());
 	}
-	path_folder_input_ = path_structure_input_.parent_path();
-	path_folder_output_ = path_folder_input_;
+	filesystem_variables_initialization(path);
+	if (parsed_options.count("o"))
+	{
+		set_path_folder_output(parsed_options["o"].as<string>());
+	}
 }
 
 bool settings::isPeriodic() const { return flag_periodic; }
@@ -44,12 +74,18 @@ void  settings::set_filter_func(std::function<bool(double, double, double)> filt
 
 const std::function<bool(double, double, double)>& settings::get_filter_func() const { return filter; }
 
-std::filesystem::path settings::get_filename_voids_position_xyz() const {
+std::filesystem::path settings::get_filename_voids_position_xyz() const
+{
 	return path_folder_output_ / filename_voids_position_xyz;
 }
 
 std::filesystem::path settings::get_filename_voids_surface_position_xyz() const {
 	return path_folder_output_ / filename_voids_surface_position_xyz;
+}
+
+std::filesystem::path settings::get_filename_voids_analysis_info() const
+{
+	return path_folder_output_ / filename_voids_analysis_info;
 }
 
 std::filesystem::path settings::get_path_folder_input() const { return path_folder_input_; }
@@ -64,12 +100,25 @@ void settings::set_path_folder_output(const string& path_str)
 		path_folder_output_ = std::filesystem::canonical(path_str);
 	}
 	catch (const std::filesystem::filesystem_error & e) {
-		cerr << RED << e.what() << RESET << endl;
+		cerr << Color::Red << e.what() << Color::None << endl;
 		exit(EXIT_FAILURE);
 	}
 	if (!std::filesystem::is_directory(path_folder_output_))
 	{
-		cerr << RED << "Output path should be a folder path rather than a file path." << RESET << endl;
+		cerr << Color::Red << "Output path should be a folder path rather than a file path." << Color::None << endl;
 		exit(EXIT_FAILURE);
 	}
+}
+
+void settings::filesystem_variables_initialization(const string& path)
+{
+	try {
+		path_structure_input_ = std::filesystem::canonical(path);
+	}
+	catch (const std::filesystem::filesystem_error & e) {
+		cerr << Color::Red << e.what() << Color::None << endl;
+		exit(EXIT_FAILURE);
+	}
+	path_folder_input_ = path_structure_input_.parent_path();
+	path_folder_output_ = path_folder_input_;
 }

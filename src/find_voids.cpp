@@ -15,11 +15,18 @@ using boost::vertex_name;
 using boost::vertex_name_t;
 using boost::graph_traits;
 
+#include <memory>
+using std::unique_ptr;
+
 #include <iostream>
 using std::cout;
 using std::endl;
 
 #include "functions.h"
+
+#ifdef DEBUG
+#include "timer.h"
+#endif
 
 
 
@@ -28,37 +35,38 @@ using std::endl;
 typedef adjacency_list<boost::vecS, boost::vecS, boost::undirectedS> Graph;
 typedef graph_traits<Graph>::vertex_descriptor Vertex;
 typedef graph_traits<Graph>::vertex_iterator Vertex_iterator;
+typedef std::pair<int, int> Edge;
 
-vector<vector<const bin*>>
-find_voids(const vector<const bin*>& empty_bins, const grid_info& gr_nf, const settings& config)
+auto find_voids(const vector<const bin*>& empty_bins, const grid_info& gr_nf, const settings& config) ->unique_ptr<vector<vector<const bin*>>>
 {
 #ifdef DEBUG
-	cout << "Begin to find voids" << endl;
+	const timer timer_voids(std::cout, "Finding voids");
 #endif
-	Graph g_bin(empty_bins.size());
-	const bool flag_periodic = config.isPeriodic();
 	const int empty_bins_size = empty_bins.size();
+	const bool flag_periodic = config.isPeriodic();
 #ifdef DEBUG
-	cout << "Begin to construct edges" << endl;
+	const timer timer_edges(std::cout, "Constructing edges");
 #endif
+	vector<Edge> edges;
 	for (int i = 0; i < empty_bins_size; ++i)
 		for (int j = i + 1; j < empty_bins_size; ++j) {
 			if (bin_if_adjacent(*empty_bins[i], *empty_bins[j], gr_nf, flag_periodic)) {
-				boost::add_edge(i, j, g_bin);
+				edges.emplace_back(i, j);
 			}
 		}
+	const Graph g_bin(edges.begin(), edges.end(), empty_bins_size);
 #ifdef DEBUG
-	cout << "Finish constructing edges" << endl;
+	timer_edges.span();
 #endif
 	std::vector<int> component(boost::num_vertices(g_bin));
-	//property_map<Vertex, Graph::vertices_size_type> c;
 	int n = boost::connected_components(g_bin, &component[0]);
-	vector<vector<const bin*>> bin_voids(n);
-	for (int i = 0; i != component.size(); ++i) {
-		bin_voids[component[i]].push_back(empty_bins[i]);
+	auto bin_voids_ptr = std::make_unique<vector<vector<const bin*>>>(n);
+	for (size_t i = 0; i != component.size(); ++i) {
+		(*bin_voids_ptr)[component[i]].push_back(empty_bins[i]);
 	}
+
 #ifdef DEBUG
-	cout << "Finish finding voids" << endl;
+	timer_voids.span();
 #endif
-	return bin_voids;
+	return bin_voids_ptr;
 }

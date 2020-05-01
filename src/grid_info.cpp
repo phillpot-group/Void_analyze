@@ -15,6 +15,7 @@ grid_info::grid_info(const settings &config, const simulation_cell &sc) {
     dx = cell_x / nx;
     dy = cell_y / ny;
     dz = cell_z / nz;
+    total_no_bins_occupied_by_fiber = nx * ny * nz;
 }
 
 std::array<int, 3> grid_info::get_grid_no() const {
@@ -23,4 +24,14 @@ std::array<int, 3> grid_info::get_grid_no() const {
 
 std::array<double, 3> grid_info::get_grid_size() const {
     return {dx, dy, dz};
+}
+
+int grid_info::get_fiber_vol_by_bins() const
+{
+    return total_no_bins_occupied_by_fiber;
+}
+
+void grid_info::set_fiber_vol_by_bins(int vol)
+{
+    total_no_bins_occupied_by_fiber = vol;
 }

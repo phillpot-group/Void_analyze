@@ -9,11 +9,15 @@
 #include <string>
 #include <filesystem>
 #include <functional>
+#include "cxxopts.hpp"
+#include "simulation_cell.h"
 
 class settings {
 public:
-	settings(const std::string& path_strctr);
+	settings(const std::string& path);
 
+	settings(const cxxopts::ParseResult& parsed_options, const simulation_cell& sc);
+	
 	bool isPeriodic() const;
 
 	bool isVoidAnalysis() const;
@@ -36,6 +40,8 @@ public:
 
 	[[nodiscard]] std::filesystem::path get_filename_voids_surface_position_xyz() const;
 
+	[[nodiscard]] std::filesystem::path get_filename_voids_analysis_info() const;
+ 
 	[[nodiscard]] std::filesystem::path get_path_folder_input() const;
 
 	[[nodiscard]] std::filesystem::path get_path_structure_input() const;
@@ -45,6 +51,7 @@ public:
 	void set_path_folder_output(const std::string& path_str);
 
 private:
+	// private members
 	bool flag_periodic = true;
 	bool flag_void_analysis = true;
 	bool flag_rm_biggest_void = false;
@@ -54,10 +61,14 @@ private:
 	double grid_size = 3.2;
 	std::string filename_voids_position_xyz = "voids_position.xyz";
 	std::string filename_voids_surface_position_xyz = "voids_surface_position.xyz";
+	std::string filename_voids_analysis_info = "voids_analysis_info.txt";
 	std::filesystem::path path_folder_input_;
 	std::filesystem::path path_structure_input_;
 	std::filesystem::path path_folder_output_;
 	std::function<bool(double, double, double)> filter;           // filter function pointer, default value is nullptr
+
+	// private member functions
+	void filesystem_variables_initialization(const std::string& path);
 };
 
 
