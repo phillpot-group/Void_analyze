@@ -8,9 +8,9 @@
 double distance_atom(const atom& lhs, const atom& rhs, std::shared_ptr<simulation_cell> sc_ptr)
 {
 	const auto [lx, ly, lz] = sc_ptr->get_vectors();
-	double delta_x = lhs.x - rhs.x;
-	double delta_y = lhs.y - rhs.y;
-	double delta_z = lhs.z - rhs.z;
+	double delta_x = abs(lhs.x - rhs.x);
+	double delta_y = abs(lhs.y - rhs.y);
+	double delta_z = abs(lhs.z - rhs.z);
 	if (delta_x > lx / 2)
 		delta_x = lx - delta_x;
 	if (delta_y > ly / 2)
