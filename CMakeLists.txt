@@ -76,5 +76,3 @@ endif ()
 if (CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME AND BUILD_TESTING)
     add_subdirectory(${PROJECT_SOURCE_DIR}/unit_test)
 endif ()
-
-add_subdirectory(${PROJECT_SOURCE_DIR}/test_graph)
